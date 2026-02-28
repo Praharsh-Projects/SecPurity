@@ -67,8 +67,8 @@ if os.path.isdir(STATIC_DIR):
 
 @app.get("/", include_in_schema=False)
 def root():
-    # redirect to the dashboard page
-    return RedirectResponse(url="/static/dashboard.html")
+    # landing page first, SOC dashboard remains at /static/index.html
+    return RedirectResponse(url="/static/home.html")
 
 
 # Health check endpoint for verifying app is up
