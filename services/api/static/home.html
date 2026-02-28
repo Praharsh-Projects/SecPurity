@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>SecPurityAI — Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body {
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background:#0b1220;
+      color:#e5e7eb;
+      line-height:1.6;
+    }
+    a { color:#22d3ee; text-decoration:none; }
+    h1,h2,h3 { color:#22d3ee; margin-bottom:12px; }
+    section { max-width:1100px; margin:auto; padding:60px 20px; }
+    .hero {
+      text-align:left;
+      padding:100px 20px;
+      background:linear-gradient(135deg,#0f172a,#0b1220);
+    }
+    .hero h1 { font-size:2.8rem; margin-bottom:12px; }
+    .hero p.subtitle { font-size:1.3rem; color:#9ca3af; margin-bottom:20px; }
+    .btns { display:flex; gap:16px; margin-top:20px; }
+    .btn {
+      padding:12px 24px;
+      border-radius:8px;
+      background:linear-gradient(135deg,#22d3ee,#3b82f6);
+      color:#0b1220; font-weight:600;
+      box-shadow:0 0 12px rgba(34,211,238,0.6);
+      transition:.3s;
+    }
+    .btn:hover { box-shadow:0 0 20px rgba(34,211,238,0.9); }
+    .grid {
+      display:grid;
+      gap:24px 32px;
+      grid-template-columns:repeat(3, 1fr);
+      margin-top:30px;
+      padding: 0 10px;
+    }
+    .grid.two-rows {
+      grid-template-columns:repeat(3, 1fr);
+      grid-template-rows: repeat(2, auto);
+      gap: 32px 32px;
+    }
+    .card {
+      background:#0f172a;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:28px 24px;
+      transition:.3s;
+      display:flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .card:hover { border-color:#22d3ee; box-shadow:0 0 15px rgba(34,211,238,0.4); }
+    .roadmap { margin-top:20px; }
+    .roadmap ul { list-style:none; padding:0; }
+    .roadmap li { margin:12px 0; padding:12px; background:#111827; border-radius:8px; border:1px solid #1f2937; }
+    footer {
+      text-align:center; padding:20px; border-top:1px solid #1f2937; color:#9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero -->
+  <section class="hero">
+    <h1>SecPurityAI</h1>
+    <p class="subtitle">AI-Driven Cybersecurity & Intrusion Detection</p>
+    <p>Bridging the gap between real-time detection and governance, explainability, and AI safety.  
+       Built for both operational SOCs and cutting-edge research.</p>
+    <p>SecPurityAI matters because modern cybersecurity demands intelligent, adaptive solutions that not only detect threats swiftly but also provide transparency and governance to build trust. Our mission is to empower defenders with AI-driven insights that enhance security posture while maintaining ethical and privacy standards.</p>
+    <div class="btns">
+      <a href="index.html" class="btn">Explore Dashboard</a>
+      <a href="SecPurityAI.pdf" class="btn">Read Whitepaper</a>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section>
+    <h2>About the Project</h2>
+    <p>SecPurityAI is an open-source intrusion detection and cybersecurity research platform developed by <strong>Praharsh Pulla</strong>.  
+       It combines machine learning, deep learning, and reasoning models with explainability, governance, and privacy-by-design principles.</p>
+    <p>The project’s purpose is to deliver a comprehensive tool that serves a dual focus: operational security teams (SOCs) requiring real-time, actionable alerts, and researchers exploring advanced AI techniques for threat detection. Its unique differentiators include integration of multi-modal AI models, federated learning for privacy preservation, and a strong emphasis on transparency and compliance with emerging AI governance frameworks.</p>
+  </section>
+
+  <!-- Features -->
+  <section>
+    <h2>Core Features</h2>
+    <div class="grid two-rows">
+      <div class="card">
+        <h3>🧠 Hybrid AI Detection</h3>
+        <p>Integrates rule-based systems, machine learning (ML) and deep neural networks (DNN), large language model (LLM) reasoning, and graph anomaly detection. This multi-layered approach enables comprehensive threat identification by combining signature-based, behavioral, contextual, and relational data analyses for robust and adaptive intrusion detection.</p>
+        <p>For example, it can detect both known malware signatures and novel attack patterns by correlating network flows with user behavior, significantly reducing false positives.</p>
+      </div>
+      <div class="card">
+        <h3>⚔️ Red vs Blue Simulation</h3>
+        <p>Emulates adversary tactics, techniques, and procedures (TTPs) within a safe cyber battle arena, allowing defenders to test and improve their strategies in realistic attack scenarios. This simulation fosters continuous defense enhancement by modeling attacker behaviors and enabling proactive security posture adjustments.</p>
+        <p>This enables SOC teams to practice incident response and validate detection rules against simulated advanced persistent threats (APTs) before real-world deployment.</p>
+      </div>
+      <div class="card">
+        <h3>📜 Explainability & Governance</h3>
+        <p>Provides detailed decision logs, model transparency through model cards, and alignment with compliance frameworks such as NIST AI Risk Management Framework. This ensures auditability, accountability, and trustworthiness in AI-driven cybersecurity operations.</p>
+        <p>Users can trace why an alert was triggered, facilitating regulatory audits and building confidence in automated systems.</p>
+      </div>
+      <div class="card">
+        <h3>🔒 Privacy by Design</h3>
+        <p>Implements federated learning techniques to train models across decentralized data sources without exposing raw data, combined with differential privacy mechanisms to protect sensitive information. This design ensures compliance with privacy regulations while enabling collaborative threat intelligence.</p>
+        <p>This allows organizations to collaboratively improve detection models without sharing proprietary or sensitive data, maintaining compliance with GDPR and other frameworks.</p>
+      </div>
+      <div class="card">
+        <h3>📈 Continuous Learning</h3>
+        <p>Automatically adapts to emerging threats, including zero-day vulnerabilities, by incorporating new data into ongoing model retraining processes. This continuous learning pipeline maintains detection efficacy and reduces manual intervention, enabling timely responses to evolving attack landscapes.</p>
+        <p>For instance, the system can quickly learn from new phishing campaigns or malware variants, minimizing the window of exposure.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section>
+    <h2>Architecture Snapshot</h2>
+    <p>Data → AI Pipelines (ML/DL/LLM) → Policy Engine → Blue/Red Agents → Dashboard & Explainability Layer.</p>
+    <p>The <strong>Data</strong> component collects and preprocesses logs, network traffic, and endpoint telemetry. The <strong>AI Pipelines</strong> apply machine learning, deep learning, and large language models to analyze and detect anomalies or threats. The <strong>Policy Engine</strong> enforces security policies and compliance rules, guiding automated responses. <strong>Blue/Red Agents</strong> simulate defensive and offensive operations for testing and training. Finally, the <strong>Dashboard & Explainability Layer</strong> provides visualization, alerts, and transparent explanations for all detection and decision-making processes.</p>
+  </section>
+
+  <!-- Roadmap -->
+  <section>
+    <h2>Implementation Roadmap</h2>
+    <div class="roadmap">
+      <ul>
+        <li><strong>Phase 0:</strong> Foundations – Establish core data ingestion, baseline detection models, and initial infrastructure setup.</li>
+        <li><strong>Phase 1:</strong> RAG + Policy Enforcement – Integrate Retrieval-Augmented Generation for context-aware reasoning and implement policy enforcement mechanisms.</li>
+        <li><strong>Phase 2:</strong> Red vs Blue MVP – Develop minimum viable product for adversarial simulation with basic attacker and defender agents.</li>
+        <li><strong>Phase 3:</strong> Graph Intelligence – Incorporate graph-based analytics to detect relational anomalies and lateral movement within networks.</li>
+        <li><strong>Phase 4:</strong> Privacy & Federation – Implement federated learning and privacy-preserving technologies to enable collaborative model training.</li>
+        <li><strong>Phase 5:</strong> Deception Systems – Deploy honeypots and decoys integrated with AI to mislead and analyze attackers.</li>
+        <li><strong>Phase 6:</strong> Hardening & Publication – Finalize security hardening, documentation, and release for public and enterprise adoption.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Future -->
+  <section>
+    <h2>Future Directions</h2>
+    <div class="grid">
+      <div class="card"><h3>🤖 LLM Reasoning</h3><p>Integrating large language models for threat analysis and decision support. This will enable natural language understanding of alerts and automated incident summarization, improving analyst productivity and situational awareness.</p></div>
+      <div class="card"><h3>🧩 ML & Deep Learning</h3><p>Pipeline improvements for classification, anomaly detection, and adaptive learning stages. Focused on enhancing accuracy, reducing false positives, and enabling real-time model updates to keep pace with evolving threat landscapes.</p></div>
+      <div class="card"><h3>🛠️ Playground</h3><p>Interactive sandbox for testing and experimenting with models and simulations. This environment will allow researchers and practitioners to prototype new detection algorithms and simulate attack-defense scenarios safely.</p></div>
+      <div class="card"><h3>🌐 Multi-Modal Detection</h3><p>Extending to logs, images, and deepfake analysis. This expansion aims to detect sophisticated attacks that use multimedia channels, including social engineering via manipulated media.</p></div>
+      <div class="card"><h3>🔮 Quantum-Safe Security</h3><p>Exploring future cryptography and resilience mechanisms. Preparing for the post-quantum era by researching encryption algorithms and defensive techniques resistant to quantum computing threats.</p></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 SecPurityAI • Built & Researched by Praharsh Pulla
+  </footer>
+</body>
+</html>

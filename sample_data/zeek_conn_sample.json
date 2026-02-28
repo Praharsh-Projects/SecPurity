@@ -1,0 +1,2 @@
+{"ts":"2025-08-18T10:42:00Z","uid":"Cxy1","id.orig_h":"10.0.3.4","id.orig_p":53321,"id.resp_h":"203.0.113.7","id.resp_p":443,"proto":"tcp","service":"ssl"}
+{"ts":"2025-08-18T10:42:20Z","uid":"Cxy2","id.orig_h":"10.0.3.4","id.orig_p":53323,"id.resp_h":"198.51.100.77","id.resp_p":80,"proto":"tcp","service":"http"}

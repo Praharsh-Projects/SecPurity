@@ -1,0 +1,37 @@
+version: 1
+
+allow_tools:
+  - whois
+  - dns_lookup
+  - vt_lookup
+  - geoip_lookup
+  - kev_lookup
+
+deny_rules:
+  - action: redteam.run
+    environments: ["prod", "internet"]
+    reason: "Red team execution is restricted to lab only"
+  - action: sandbox.execute
+    environments: ["prod"]
+    reason: "Direct sandbox execution is not allowed in production"
+
+approvals:
+  blue.approve:
+    required_role: IR-Lead
+  isolate_host:
+    required_role: IR-Lead
+  patch-cve:
+    required_role: IR-Lead
+
+high_risk_threshold: 0.8
+high_risk_required_role: IR-Lead
+
+forbidden_targets:
+  - internet
+  - production
+
+release_gates:
+  minimum:
+    evaluation_pass_rate: 0.95
+    firewall_block_rate: 0.99
+    policy_pass_rate: 1.0

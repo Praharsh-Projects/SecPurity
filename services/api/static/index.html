@@ -1,0 +1,1585 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>SecPurityAI • Events & Alerts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <!-- Dark theme and layout variables -->
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-body: #0b1220;
+      --bg-card: #0f172a;
+      --bg-panel: #111827;
+      --border: #1f2937;
+      --border-light: #334155;
+      --text-primary: #e5e7eb;
+      --text-secondary: #9ca3af;
+      --accent-good: #34d399;
+      --accent-bad: #f87171;
+      --radius-small: 6px;
+      --radius-medium: 10px;
+      --radius-large: 12px;
+      --transition-fast: .15s ease;
+    }
+    body {
+      margin:24px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: var(--bg-body);
+      color: var(--text-primary);
+    }
+    h1 { margin:0 0 16px; font-size:22px; }
+    /* Layout with persistent sidebar */
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap:16px;
+    }
+    .sidebar {
+      position:sticky;
+      top:24px;
+      height:calc(100vh - 48px);
+      background: var(--bg-card);
+      border:1px solid var(--border);
+      border-radius: var(--radius-large);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .sidebar .brand {
+      font-weight:700;
+      font-size:16px;
+      margin:2px 6px 8px;
+      color:var(--text-primary);
+    }
+    .nav-link {
+      display:block;
+      padding:8px 10px;
+      border-radius: var(--radius-medium);
+      color:var(--text-primary);
+      text-decoration:none;
+      border:1px solid transparent;
+      transition: background var(--transition-fast), border var(--transition-fast);
+    }
+    .nav-link:hover {
+      background: #111827;
+      border-color: var(--border);
+    }
+    .nav-link[aria-current="page"] {
+      background:#111827;
+      border-color: var(--border-light);
+    }
+    .content {
+      min-width:0;
+    }
+    /* Responsive: collapse sidebar into a top bar on small screens */
+    @media (max-width: 980px) {
+      .layout { display:block; }
+      .sidebar {
+        position:relative;
+        height:auto;
+        flex-direction:row;
+        gap:8px;
+        overflow:auto;
+        margin-bottom:12px;
+      }
+      .nav-link { white-space:nowrap; }
+    }
+
+    /* Generic cards and rows */
+    .section {
+      background: var(--bg-panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius-large);
+      padding:16px;
+      margin-bottom:16px;
+    }
+    .label {
+      color:var(--text-secondary);
+      font-size:12px;
+      margin-bottom:6px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+    .value {
+      font-size:22px;
+      font-weight:700;
+    }
+    .row {
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .card {
+      flex:1 1 220px;
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:var(--radius-medium);
+      padding:12px;
+      min-width:220px;
+    }
+    input, select, button {
+      padding:10px 12px;
+      border-radius:var(--radius-medium);
+      border:1px solid #374151;
+      background:var(--bg-card);
+      color:var(--text-primary);
+      transition:background var(--transition-fast);
+    }
+    input, select { width:100%; }
+    button {
+      background:#111827;
+      cursor:pointer;
+    }
+    button:hover { background:#1f2937; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
+
+    .ok { color:var(--accent-good); }
+    .bad { color:var(--accent-bad); }
+    .muted { color:var(--text-secondary); }
+    .hidden { display: none !important; }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:12px; }
+    .col-3 { grid-column: span 3; min-width:220px; }
+    .col-4 { grid-column: span 4; min-width:240px; }
+    .col-6 { grid-column: span 6; min-width:280px; }
+    .col-12 { grid-column:1 / -1; }
+
+    .table-wrap {
+      overflow:auto;
+      border-radius: var(--radius-medium);
+      border:1px solid var(--border);
+    }
+    table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+    thead th {
+      position:sticky;
+      top:0;
+      background:#0f172a;
+      text-align:left;
+      padding:10px;
+      border-bottom:1px solid var(--border);
+    }
+    tbody td {
+      padding:10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+    }
+    tbody tr:nth-child(odd){ background:#0f172a; }
+    tbody tr:nth-child(even){ background:#0c1426; }
+
+    .badge {
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--border-light);
+      background:#0b1220;
+      font-size:12px;
+    }
+    .chip {
+      display:inline-block;
+      margin-right:6px;
+      padding:2px 6px;
+      border-radius:6px;
+      background:#0b1220;
+      border:1px solid var(--border-light);
+      font-size:12px;
+    }
+
+    details summary { cursor:pointer; color:var(--text-secondary); }
+    pre {
+      white-space:pre-wrap;
+      word-break:break-word;
+      background:#0b1220;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid var(--border);
+    }
+
+    .toolbar {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:end;
+    }
+    .toolbar .group {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:180px;
+    }
+    .toolbar .grow { flex:1 1 auto; min-width:240px; }
+    .toolbar .narrow { min-width:140px; }
+    .toolbar .datetime { min-width:220px; }
+    .pager {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .pager button[disabled] { opacity:0.5; cursor:not-allowed; }
+
+    /* Drawer / overlay */
+    .overlay {
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.5);
+      display:none;
+      z-index:999;
+    }
+    .overlay.show { display:block; }
+    .drawer {
+      position:fixed;
+      top:0;
+      right:0;
+      width:min(720px,100%);
+      height:100%;
+      background:var(--bg-body);
+      border-left:1px solid var(--border);
+      box-shadow:-8px 0 24px rgba(0,0,0,.35);
+      transform:translateX(100%);
+      transition:transform .2s ease;
+      display:flex;
+      flex-direction:column;
+      z-index:1000;
+    }
+    .drawer.open { transform:translateX(0); }
+    .drawer-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:16px;
+      border-bottom:1px solid var(--border);
+      background:#0f172a;
+    }
+    .drawer-body { padding:16px; overflow:auto; }
+    .kv {
+      display:grid;
+      grid-template-columns:140px 1fr;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .btn-row {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .subtle { background:#0f172a; }
+    .danger { background:#1f2937; border-color:#ef4444; }
+    .small { font-size:12px; padding:6px 8px; }
+
+    /* Help blocks */
+    details.help {
+      border:1px solid var(--border-light);
+      background:#0b1220;
+      border-radius:10px;
+      padding:10px 12px;
+      margin:10px 0 14px;
+    }
+    details.help summary {
+      cursor:pointer;
+      color:#93c5fd;
+      font-weight:600;
+      margin:-4px 0 6px;
+    }
+    details.help .desc {
+      color:#cbd5e1;
+      font-size:13px;
+      line-height:1.5;
+    }
+    details.help .desc code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono";
+      background:#0f172a;
+      border:1px solid var(--border);
+      padding:1px 4px;
+      border-radius:4px;
+    }
+    details.help .cols {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(220px,1fr));
+      gap:10px;
+    }
+    @media (max-width:820px) {
+      details.help .cols { grid-template-columns:1fr; }
+    }
+
+    /* Auto-refresh indicator */
+    .auto-indicator {
+      display:inline-block;
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      margin-left:4px;
+      background:var(--accent-good);
+      animation:pulse 1s infinite;
+      vertical-align:middle;
+      visibility:hidden;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity:0.4; }
+      50% { opacity:1; }
+    }
+
+    /* Toast notifications */
+    .toast {
+      position:fixed;
+      bottom:24px;
+      right:24px;
+      background:#111827;
+      border:1px solid var(--border-light);
+      color:var(--text-primary);
+      padding:8px 12px;
+      border-radius:8px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+      opacity:0;
+      transition:opacity .3s ease, transform .3s ease;
+      transform:translateY(20px);
+      z-index:2000;
+    }
+    .toast.show {
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    /* Loading skeleton rows */
+    .skeleton {
+      background:linear-gradient(-90deg,#111827 0%,#0c1426 50%,#111827 100%);
+      background-size:400% 400%;
+      animation:skeleton 1.2s ease-in-out infinite;
+    }
+    @keyframes skeleton {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+    /* Dedupe: hide any accidental duplicate Playground sections/links (safety net) */
+    .content section[data-section="playground"]:not(:last-of-type) { display:none !important; }
+    #sidebar .nav-link[data-link="playground"]:not(:first-of-type) { display:none !important; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="sidebar" role="navigation" aria-label="Main">
+      <div class="brand">SecPurityAI</div>
+      <a href="#overview" data-link="overview" class="nav-link" aria-current="page">Overview</a>
+      <a href="#events" data-link="events" class="nav-link">Events</a>
+      <a href="#alerts" data-link="alerts" class="nav-link">Alerts</a>
+      <a href="#similar" data-link="similar" class="nav-link">Similar</a>
+      <a href="#assets" data-link="assets" class="nav-link">Assets</a>
+      <a href="#impacts" data-link="impacts" class="nav-link">Impacts</a>
+      <a href="#settings" data-link="settings" class="nav-link">Settings</a>
+      <a href="#playground" data-link="playground" class="nav-link">Playground</a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="content">
+      <h1>SecPurityAI • Events & Alerts</h1>
+
+      <!-- Warning if opened as file:// -->
+      <div id="fileBanner" class="banner" style="display:none">
+        You opened this page as <span class="mono">file://</span>. Please open via the API:
+        <span class="mono">http://localhost:8080/</span> so the backend endpoints work.
+      </div>
+
+      <!-- Overview Section -->
+      <section id="overviewSection" class="section" data-section="overview">
+        <!-- KPI overview help -->
+        <details class="help" open>
+          <summary>What do these numbers mean?</summary>
+          <div class="desc cols">
+            <div>
+              <strong>Totals</strong>: total events stored in Postgres.<br/>
+              <strong>Normalized</strong>: events that passed parsing &amp; were converted into our ECS‑lite JSON (queried via <code>/metrics/summary</code>).<br/>
+              <strong>Quarantined</strong>: events that failed data‑quality checks (kept for review, excluded from analytics).
+            </div>
+            <div>
+              <strong>Stores</strong>: live health of backends — <em>PG</em> (Postgres), <em>MinIO</em> (object store for raw/normalized blobs & models), <em>Qdrant</em> (vector search for “similar events”), and <em>Neo4j</em> (graph relations). “ok” = reachable now.
+            </div>
+          </div>
+        </details>
+        <div class="row">
+          <div class="card">
+            <div class="label" title="Total events stored in Postgres">Totals</div>
+            <div class="value" id="totals">—</div>
+            <div class="label">Events ingested</div>
+          </div>
+          <div class="card">
+            <div class="label" title="Events that passed parsing and were converted into ECS-lite">Normalized</div>
+            <div class="value" id="normalized">—</div>
+            <div class="label">Valid ECS-lite</div>
+          </div>
+          <div class="card">
+            <div class="label" title="Events that failed data-quality checks">Quarantined</div>
+            <div class="value" id="quarantined">—</div>
+            <div class="label">Failed DQ checks</div>
+          </div>
+          <div class="card">
+            <div class="label">Stores</div>
+            <div id="stores">
+              PG: <span id="pg">—</span> ·
+              MinIO: <span id="minio">—</span> ·
+              Qdrant: <span id="qdrant">—</span> ·
+              Neo4j: <span id="neo4j">—</span>
+              <button id="btnKpiRefresh" class="small" style="margin-left:8px;">Refresh</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Similar Events Section -->
+      <section id="similarSection" class="section" data-section="similar">
+        <details class="help">
+          <summary>What is “Explore Similar Events”?</summary>
+          <div class="desc">
+            Paste an <strong>Event ID</strong> to find neighbors in vector space (stored in Qdrant). The backend builds a text+tabular embedding and returns the top matches by cosine similarity.
+            <ul>
+              <li><strong>Limit</strong>: number of neighbors to return (1–50).</li>
+              <li><strong>Similar</strong> button in tables pre-fills the ID for convenience.</li>
+            </ul>
+          </div>
+        </details>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+          <h3 style="margin:0;">Explore Similar Events</h3>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input id="similar-event-id" type="text" placeholder="Paste Event ID (from Events table)" 
+                   style="min-width:280px; padding:.5rem;" 
+                   title="Paste a valid Event ID to find similar neighbors"/>
+            <input id="similar-limit" type="number" min="1" max="50" value="8" 
+                   style="width:80px; padding:.5rem;" 
+                   title="Number of neighbors to return (1–50)"/>
+            <button id="btnSimilarFind">Find Similar</button>
+          </div>
+        </div>
+        <div class="muted" style="margin-top:6px; font-size:12px;">
+          Tip: Open any event, then use <em>Similar</em> from the drawer to jump here pre-filled.
+        </div>
+        <div id="similar-results" style="margin-top:.75rem"></div>
+      </section>
+
+      <!-- Events Section -->
+      <section id="eventsSection" class="section" data-section="events">
+        <div class="label">Query Events</div>
+        <details class="help">
+          <summary>How to use the Events panel</summary>
+          <div class="desc cols">
+            <div>
+              <strong>Filters</strong>: free‑text searches <em>message</em>, <em>id</em>, and <em>labels</em>. You can also filter by <em>tenant</em>, <em>sensor</em>, and <em>label</em> strings.<br/>
+              <strong>Time range</strong>: set <code>From</code> / <code>To</code> (browser local time; sent as ISO to the API).<br/>
+              <strong>Limit</strong>: page size. Use the pager below the table to navigate.
+            </div>
+            <div>
+              <strong>Auto refresh</strong>: re-run the query every 5s (handy for live feeds).<br/>
+              <strong>Export</strong>: downloads the current query as <code>CSV</code> or <code>NDJSON</code>.<br/>
+              <strong>Row actions</strong>: open details, copy ID, or run a Similar search on the specific event.
+            </div>
+          </div>
+        </details>
+        <div class="toolbar">
+          <div class="group grow">
+            <label class="label" title="Free text search across message, id and labels">Free text (message, id, labels)</label>
+            <input id="q" placeholder="e.g., CVE-2025, beacon, 203.0.113.7" title="Enter keywords to search across message, id and labels"/>
+          </div>
+          <div class="group narrow">
+            <label class="label" title="Filter events by tenant">Tenant</label>
+            <input id="tenant" placeholder="acme" title="Enter tenant name (case-sensitive)"/>
+          </div>
+          <div class="group narrow">
+            <label class="label" title="Filter events by sensor source">Sensor</label>
+            <input id="sensor" placeholder="suricata / nvd / zeek" title="Enter sensor name (e.g. suricata, nvd, zeek)"/>
+          </div>
+          <div class="group narrow">
+            <label class="label" title="Filter events by label value">Label</label>
+            <input id="label" placeholder="ioc_hit, sid:4711" title="Enter a label string (exact match)"/>
+          </div>
+          <div class="group datetime">
+            <label class="label" title="Start of time range (ISO)">From</label>
+            <input id="ts_from" type="datetime-local" title="Start of time range"/>
+          </div>
+          <div class="group datetime">
+            <label class="label" title="End of time range (ISO)">To</label>
+            <input id="ts_to" type="datetime-local" title="End of time range"/>
+          </div>
+          <div class="group narrow">
+            <label class="label" title="Maximum number of events per page">Limit</label>
+            <select id="limit" title="Results per page">
+              <option>10</option><option selected>25</option><option>50</option><option>100</option>
+            </select>
+          </div>
+          <div class="group">
+            <label class="label" style="opacity:0;">.</label>
+            <button id="btnSearch">Search</button>
+          </div>
+          <div class="group">
+            <label class="label" style="opacity:0;">.</label>
+            <button id="btnReset">Reset</button>
+          </div>
+          <div class="group" style="min-width:160px; display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="auto" title="Toggle automatic refresh"/>
+            <label for="auto" class="muted">Auto refresh (5s)</label>
+            <span id="autoIndicator" class="auto-indicator"></span>
+          </div>
+          <div class="group" style="min-width:180px;">
+            <label class="label">Export</label>
+            <div style="display:flex; gap:8px;">
+              <button id="btnExportCsv" class="subtle" title="Download CSV">CSV</button>
+              <button id="btnExportNdjson" class="subtle" title="Download NDJSON">NDJSON</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px; display:flex; justify-content: space-between; align-items:center;">
+          <div class="muted" id="pageMeta">—</div>
+          <div class="pager">
+            <button id="prevBtn">Prev</button>
+            <button id="nextBtn">Next</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:180px;">Time</th>
+                <th style="width:110px;">Tenant</th>
+                <th style="width:110px;">Sensor</th>
+                <th>Message</th>
+                <th style="width:200px;">Labels</th>
+                <th style="width:280px;">ID</th>
+              </tr>
+            </thead>
+            <tbody id="logTable">
+              <!-- results will render here -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Alerts Section -->
+      <section id="alertsSection" class="section" data-section="alerts">
+        <div class="label">Alerts</div>
+        <details class="help">
+          <summary>About Alerts</summary>
+          <div class="desc cols">
+            <div>
+              <strong>Severity</strong>: CRITICAL/HIGH/MEDIUM/LOW as provided by the sensor (e.g., Suricata/NVD/KEV).<br/>
+              <strong>Rule</strong>: rule identifier from the source sensor (when available).<br/>
+              <strong>Event</strong>: the underlying event ID this alert references — open it to inspect the raw payload.
+            </div>
+            <div>
+              <strong>Quick</strong>:
+              <ul>
+                <li><em>KEV only</em> — filter to Known Exploited Vulnerabilities alerts.</li>
+                <li><em>All</em> — clear alert filters.</li>
+                <li><em>Sync KEV now</em> — pull the latest KEV feed and generate alerts.</li>
+              </ul>
+              <strong>Auto refresh</strong>: re-run the alert query every 5s.
+            </div>
+          </div>
+        </details>
+        <div class="toolbar">
+          <div class="group narrow">
+            <label class="label" title="Filter alerts by tenant">Tenant</label>
+            <input id="a_tenant" placeholder="acme" title="Enter tenant name"/>
+          </div>
+          <div class="group narrow">
+            <label class="label" title="Filter alerts by sensor">Sensor</label>
+            <input id="a_sensor" placeholder="suricata / nvd / zeek" title="Enter sensor name"/>
+          </div>
+          <div class="group narrow">
+            <label class="label" title="Filter alerts by severity">Severity</label>
+            <select id="a_sev" title="Select severity level">
+              <option value="">Any</option>
+              <option>CRITICAL</option>
+              <option>HIGH</option>
+              <option>MEDIUM</option>
+              <option>LOW</option>
+            </select>
+          </div>
+          <div class="group datetime">
+            <label class="label" title="Start of alert time range">From</label>
+            <input id="a_ts_from" type="datetime-local" title="Start time"/>
+          </div>
+          <div class="group datetime">
+            <label class="label" title="End of alert time range">To</label>
+            <input id="a_ts_to" type="datetime-local" title="End time"/>
+          </div>
+          <div class="group narrow">
+            <label class="label" title="Number of alerts per page">Limit</label>
+            <select id="a_limit" title="Results per page">
+              <option>10</option><option selected>25</option><option>50</option><option>100</option>
+            </select>
+          </div>
+          <div class="group">
+            <label class="label" style="opacity:0;">.</label>
+            <button id="a_btnSearch">Search</button>
+          </div>
+          <div class="group">
+            <label class="label" style="opacity:0;">.</label>
+            <button id="a_btnReset">Reset</button>
+          </div>
+          <div class="group" style="min-width:220px;">
+            <label class="label">Quick</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button id="btnKevOnly" class="subtle" title="Show only KEV alerts">KEV only</button>
+              <button id="btnAllAlerts" class="subtle" title="Clear filters">All</button>
+              <button id="btnSyncKev" class="small" title="Fetch latest KEV feed">Sync KEV now</button>
+            </div>
+          </div>
+          <div class="group" style="min-width:160px; display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="a_auto" title="Toggle automatic refresh"/>
+            <label for="a_auto" class="muted">Auto refresh (5s)</label>
+            <span id="alertsAutoIndicator" class="auto-indicator"></span>
+          </div>
+        </div>
+        <div style="margin-top:10px; display:flex; justify-content: space-between; align-items:center;">
+          <div class="muted" id="a_pageMeta">—</div>
+          <div class="pager">
+            <button id="a_prevBtn">Prev</button>
+            <button id="a_nextBtn">Next</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:180px;">Time</th>
+                <th style="width:120px;">Severity</th>
+                <th style="width:110px;">Tenant</th>
+                <th style="width:110px;">Sensor</th>
+                <th style="width:220px;">Rule</th>
+                <th>Title</th>
+                <th style="width:280px;">Event</th>
+              </tr>
+            </thead>
+            <tbody id="alertsTable">
+              <!-- alerts render here -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Assets Section -->
+      <section id="assetsSection" class="section" data-section="assets">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+          <h3 style="margin:0;">Assets</h3>
+          <details class="help">
+            <summary>What are Assets?</summary>
+            <div class="desc">
+              Assets represent hosts or applications you manage. Use search to filter by vendor/product/hostname.
+              Columns include: <em>Hostname</em>, <em>IP</em>, <em>Vendor</em>, <em>Product</em>, <em>Version</em>, <em>CPE</em>,
+              <em>Criticality</em> (1–5), and <em>Owner</em>. “Add Example Host” posts a sample asset for demo purposes.
+            </div>
+          </details>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input id="assetQ" placeholder="Search vendor/product/hostname" style="min-width:260px; padding:.5rem;" 
+                   title="Enter vendor, product or hostname to search assets">
+            <button onclick="loadAssets()" title="Search for assets">Search</button>
+            <button onclick="seedAssetExample()" title="Add a sample asset">Add Example Host</button>
+            <button class="subtle" onclick="setApiKey()" title="Set API key used for API calls">Set API Key</button>
+          </div>
+        </div>
+        <div id="assetsTable" class="table-wrap" style="margin-top:.5rem; max-height:320px; overflow:auto;"></div>
+      </section>
+
+      <!-- Impacts Section -->
+      <section id="impactsSection" class="section" data-section="impacts">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+          <h3 style="margin:0;">Impacts (CVE ➜ Assets)</h3>
+          <details class="help">
+            <summary>About CVE ➜ Asset Impacts</summary>
+            <div class="desc">
+              This panel shows matches between vulnerability records (e.g., KEV/NVD) and your assets based on CPE/vendor/product/version.
+              <ul>
+                <li><strong>CVE</strong> — vulnerability identifier (e.g., CVE‑2025‑12345).</li>
+                <li><strong>Severity</strong> — source-provided rating (if available).</li>
+                <li><strong>Match reason</strong> — why the asset matched (e.g., CPE alignment or explicit vendor/product hit).</li>
+                <li><strong>Event</strong> — originating event that led to the mapping (truncated ID; click to open in Events).</li>
+              </ul>
+            </div>
+          </details>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input id="cveQ" placeholder="CVE-YYYY-NNNN" style="min-width:220px; padding:.5rem;" 
+                   title="Enter a CVE identifier (e.g., CVE‑2025‑12345)">
+            <button onclick="loadImpacts()" title="Search impacts by CVE">Search CVE</button>
+            <button onclick="loadImpacts(true)" title="Load latest impact matches">Latest</button>
+          </div>
+        </div>
+        <div id="impactsTable" class="table-wrap" style="margin-top:.5rem; max-height:320px; overflow:auto;"></div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settingsSection" class="section" data-section="settings">
+        <h3>Settings & API Key</h3>
+        <details class="help">
+          <summary>About API Key</summary>
+          <div class="desc">
+            Most API calls (assets, impacts, KEV sync) require an <code>X-API-Key</code> header. Use the field below to store your API key in local storage. This page never transmits your key anywhere except when calling your own API.<br/>
+            Future settings will live here (e.g. default auto-refresh).
+          </div>
+        </details>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <label for="settingsApiKey" class="label" style="margin-bottom:0;" title="Enter your API key from .env">API Key</label>
+          <input id="settingsApiKey" placeholder="Enter API key" style="min-width:260px; padding:.5rem;">
+          <button id="btnSaveApiKey" title="Save API key to local storage">Save</button>
+          <button id="btnClearApiKey" class="subtle" title="Clear saved API key">Clear</button>
+        </div>
+      </section>
+
+      <section id="playgroundSection" class="section" data-section="playground">
+        <h3 style="margin-top:0">Prototype Playground</h3>
+        <div class="row" style="margin-top:.5rem;">
+          <div class="card">
+            <div class="label">API</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:.5rem;">
+              <label>Base
+                <input id="pgApiBase" type="text" placeholder="http://localhost:8000" style="min-width:260px;">
+              </label>
+              <label>Key
+                <input id="pgApiKey" type="password" placeholder="X-API-Key" style="min-width:220px;">
+              </label>
+              <button id="pgSaveAuthBtn">Save</button>
+              <span id="pgAuthSavedMsg" style="opacity:.7; margin-left:.5rem;"></span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">Lab (Red)</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:.5rem;">
+              <label>Scenario
+                <select id="pgScenarioSel" style="min-width:180px;">
+                  <option value="lateral_move_v1">lateral_move_v1</option>
+                  <option value="single_exploit">single_exploit</option>
+                </select>
+              </label>
+              <label>Speed
+                <select id="pgSpeedSel"><option>fast</option><option>normal</option></select>
+              </label>
+              <button id="pgRunBtn">Run Scenario</button>
+            </div>
+            <pre id="pgLabOut" class="mono" style="min-height:6rem;">—</pre>
+          </div>
+
+          <div class="card">
+            <div class="label">Latest Alerts</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:.5rem;">
+              <button id="pgRefreshAlertsBtn">Refresh (10)</button>
+              <label>Alert
+                <select id="pgAlertSel" style="min-width:180px;"></select>
+              </label>
+              <label>Event
+                <select id="pgEventSel" style="min-width:180px;"></select>
+              </label>
+            </div>
+            <pre id="pgAlertsOut" class="mono" style="min-height:6rem;">—</pre>
+          </div>
+
+          <div class="card">
+            <div class="label">Graph</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:.5rem;">
+              <button id="pgIngestBtn">Ingest → Graph</button>
+              <button id="pgScoreBtn">Graph Score</button>
+              <button id="pgSubgraphBtn">Subgraph</button>
+            </div>
+            <pre id="pgGraphOut" class="mono" style="min-height:6rem;">—</pre>
+          </div>
+
+          <div class="card">
+            <div class="label">Blue Suggestions</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:.5rem;">
+              <button id="pgBlueSuggestBtn">Suggest</button>
+              <button id="pgBlueApproveBtn">Approve: isolate-src</button>
+            </div>
+            <pre id="pgBlueOut" class="mono" style="min-height:6rem;">—</pre>
+          </div>
+
+          <div class="card">
+            <div class="label">Score Histogram</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:.5rem;">
+              <label>Hours <input id="pgHistHours" type="number" min="1" max="336" value="48" style="width:80px;"></label>
+              <button id="pgHistBtn">Fetch</button>
+            </div>
+            <pre id="pgHistOut" class="mono" style="min-height:6rem;">—</pre>
+          </div>
+
+        </div>
+      </section>
+
+      <script>
+      (function(){
+        const $ = (s) => document.querySelector(s);
+        const j = (x) => JSON.stringify(x, null, 2);
+
+        async function pg_refreshAlerts(){
+          try{
+            const r = await apiFetch('/alerts?limit=10');
+            const data = await r.json();
+            $('#pgAlertsOut').textContent = j(data);
+            const items = (data && data.items) ? data.items : [];
+            const aSel = $('#pgAlertSel'), eSel = $('#pgEventSel');
+            aSel.innerHTML = ''; eSel.innerHTML = '';
+            for(const it of items){
+              const ao = document.createElement('option'); ao.value = it.id; ao.textContent = `${it.severity||''} – ${it.title||it.id}`; aSel.appendChild(ao);
+              const eo = document.createElement('option'); eo.value = it.event_id; eo.textContent = it.event_id; eSel.appendChild(eo);
+            }
+          }catch(e){ $('#pgAlertsOut').textContent = '[error] ' + e; }
+        }
+
+        $('#pgRefreshAlertsBtn').addEventListener('click', pg_refreshAlerts);
+
+        $('#pgRunBtn').addEventListener('click', async ()=>{
+          const body = { scenario: $('#pgScenarioSel').value, speed: $('#pgSpeedSel').value };
+          try{
+            const r = await apiFetch('/lab/red/run', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            const data = await r.json();
+            $('#pgLabOut').textContent = j(data);
+            pg_refreshAlerts();
+          }catch(e){ $('#pgLabOut').textContent = '[error] ' + e; }
+        });
+
+        $('#pgIngestBtn').addEventListener('click', async ()=>{
+          const eid = $('#pgEventSel').value; if(!eid){ $('#pgGraphOut').textContent = 'Select an Event first'; return; }
+          try{
+            const r = await apiFetch('/graph/ingest/event', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({event_id:eid}) });
+            const data = await r.json();
+            $('#pgGraphOut').textContent = j(data);
+          }catch(e){ $('#pgGraphOut').textContent = '[error] ' + e; }
+        });
+
+        $('#pgScoreBtn').addEventListener('click', async ()=>{
+          const eid = $('#pgEventSel').value; if(!eid){ $('#pgGraphOut').textContent = 'Select an Event first'; return; }
+          try{
+            const r = await apiFetch('/graph/score?event_id='+encodeURIComponent(eid));
+            const data = await r.json();
+            $('#pgGraphOut').textContent = j(data);
+          }catch(e){ $('#pgGraphOut').textContent = '[error] ' + e; }
+        });
+
+        $('#pgSubgraphBtn').addEventListener('click', async ()=>{
+          const eid = $('#pgEventSel').value; if(!eid){ $('#pgGraphOut').textContent = 'Select an Event first'; return; }
+          try{
+            const r = await apiFetch('/graph/subgraph?event_id='+encodeURIComponent(eid));
+            const data = await r.json();
+            $('#pgGraphOut').textContent = j(data);
+          }catch(e){ $('#pgGraphOut').textContent = '[error] ' + e; }
+        });
+
+        $('#pgBlueSuggestBtn').addEventListener('click', async ()=>{
+          const aid = $('#pgAlertSel').value; if(!aid){ $('#pgBlueOut').textContent = 'Select an Alert first'; return; }
+          try{
+            const r = await apiFetch('/agents/blue/suggest?alert_id='+encodeURIComponent(aid));
+            const data = await r.json();
+            $('#pgBlueOut').textContent = j(data);
+          }catch(e){ $('#pgBlueOut').textContent = '[error] ' + e; }
+        });
+
+        $('#pgBlueApproveBtn').addEventListener('click', async ()=>{
+          const aid = $('#pgAlertSel').value; if(!aid){ $('#pgBlueOut').textContent = 'Select an Alert first'; return; }
+          try{
+            const r = await apiFetch('/agents/blue/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({alert_id:aid, step_id:'isolate-src'}) });
+            const data = await r.json();
+            $('#pgBlueOut').textContent = j(data);
+          }catch(e){ $('#pgBlueOut').textContent = '[error] ' + e; }
+        });
+
+        $('#pgHistBtn').addEventListener('click', async ()=>{
+          const h = Math.max(1, Math.min(336, parseInt($('#pgHistHours').value||'48', 10)));
+          try{
+            const r = await apiFetch('/ml/scores/summary?hours='+h);
+            const data = await r.json();
+            $('#pgHistOut').textContent = j(data);
+          }catch(e){ $('#pgHistOut').textContent = '[error] ' + e; }
+        });
+
+        // Initial load
+        pg_refreshAlerts();
+      })();
+      </script>
+      </div><!-- /.content -->
+  </div><!-- /.layout -->
+
+  <!-- Drawer and overlay for event details -->
+  <div id="overlay" class="overlay" onclick="closeDrawer()"></div>
+  <div id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <div class="drawer-header">
+      <strong id="drawerTitle">Event</strong>
+      <button class="small" onclick="closeDrawer()">Close</button>
+    </div>
+    <div class="drawer-body">
+      <details class="help">
+        <summary>About this Event</summary>
+        <div class="desc">
+          The header shows key fields: <em>ID</em>, <em>Tenant</em>, <em>Sensor</em>, and <em>Timestamp</em>.<br/>
+          <strong>Buttons</strong>:
+          <ul>
+            <li><em>Copy ID</em> — copies the event UUID.</li>
+            <li><em>Find Similar</em> — pre-fills the Similar search with this ID and runs it.</li>
+            <li><em>Download JSON</em> — downloads the event as a JSON file.</li>
+            <li><em>Copy cURL</em> — helper commands: index to Qdrant or send to Neo4j.</li>
+          </ul>
+          <strong>Raw (DB)</strong> shows the original stored payload. <strong>Normalized (MinIO)</strong> is the ECS‑lite version used by analytics.
+        </div>
+      </details>
+      <div class="btn-row">
+        <input id="apiKeyInput" placeholder="API key (for cURL snippets only)" style="max-width: 280px;" title="Enter API key used in cURL commands">
+        <button class="small" onclick="copyText(document.getElementById('eventId').textContent)" title="Copy event ID">Copy ID</button>
+        <button class="small subtle" onclick="prefillSimilar(document.getElementById('eventId').textContent); fetchSimilar();" title="Find similar events">Find Similar</button>
+        <button class="small subtle" onclick="downloadJson()" title="Download event as JSON">Download JSON</button>
+        <button class="small" onclick="copyCurl('index')" title="Copy cURL command to index event to Qdrant">Copy cURL: index→Qdrant</button>
+        <button class="small" onclick="copyCurl('graph')" title="Copy cURL command to send event to Neo4j">Copy cURL: graph→Neo4j</button>
+      </div>
+
+      <div class="kv">
+        <div class="muted">ID</div><div class="mono" id="eventId">—</div>
+        <div class="muted">Tenant</div><div id="eventTenant">—</div>
+        <div class="muted">Sensor</div><div id="eventSensor">—</div>
+        <div class="muted">Timestamp</div><div id="eventTs">—</div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div class="label">Message</div>
+        <div id="eventMsg">—</div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div class="label">Labels</div>
+        <div id="eventLabels">—</div>
+      </div>
+
+      <details open>
+        <summary>Raw (DB)</summary>
+        <pre class="mono" id="eventRaw">—</pre>
+      </details>
+
+      <details style="margin-top:10px;">
+        <summary>Normalized (MinIO)</summary>
+        <pre class="mono" id="eventNorm">—</pre>
+      </details>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Core scripts -->
+  <script>
+    // --- Router: hide/show sections based on location.hash ---
+    const SECTIONS = ["overview","events","alerts","similar","assets","impacts","settings","playground"];
+    // Remove accidental duplicate Playground UI & nav links (source-safe)
+    document.addEventListener('DOMContentLoaded', () => {
+      const dups = document.querySelectorAll('section[data-section="playground"]');
+      for (let i = 0; i < dups.length - 1; i++) {
+        dups[i].remove();
+      }
+      const navs = document.querySelectorAll('#sidebar .nav-link[data-link="playground"]');
+      for (let i = 1; i < navs.length; i++) {
+        navs[i].remove();
+      }
+    });
+    function setActiveSection(key) {
+      const target = SECTIONS.includes(key) ? key : "overview";
+      document.querySelectorAll('[data-section]').forEach(s => {
+        s.classList.toggle('hidden', s.getAttribute('data-section') !== target);
+      });
+      const links = document.querySelectorAll('#sidebar .nav-link');
+      links.forEach(a => a.setAttribute('aria-current', a.getAttribute('data-link') === target ? 'page' : 'false'));
+      if (!location.hash || location.hash.slice(1) !== target) {
+        history.replaceState(null, '', '#' + target);
+      }
+    }
+    window.addEventListener('hashchange', () => setActiveSection(location.hash.slice(1)));
+    window.addEventListener('DOMContentLoaded', () => setActiveSection(location.hash.slice(1)));
+
+    // Simple API-key wrapper used by the Assets/Impacts panels
+    let API_KEY = localStorage.getItem('SECURITY_API_KEY') || '';
+    function setApiKey() {
+      const k = prompt('Enter X-API-Key (from .env API_KEY):', API_KEY || '');
+      if(k!==null){ API_KEY = k.trim(); localStorage.setItem('SECURITY_API_KEY', API_KEY); }
+    }
+    function apiFetch(path, opts) {
+      opts = opts || {};
+      opts.headers = Object.assign({'X-API-Key': API_KEY}, opts.headers||{});
+      return fetch(path, opts);
+    }
+
+    // Utility
+    function yesNo(el, ok) {
+      el.textContent = ok ? 'ok' : 'down';
+      el.className = ok ? 'ok' : 'bad';
+    }
+    function fmtRel(iso) {
+      try{
+        const d=new Date(iso);
+        const s=(Date.now()-d.getTime())/1000;
+        if(isNaN(s)) return iso;
+        if(s<60) return Math.floor(s)+"s ago";
+        if(s<3600) return Math.floor(s/60)+"m ago";
+        if(s<86400) return Math.floor(s/3600)+"h ago";
+        return Math.floor(s/86400)+"d ago";
+      }catch(e){ return iso; }
+    }
+    function toIsoOrNull(id) {
+      const v=document.getElementById(id).value;
+      if(!v) return null;
+      const d = new Date(v);
+      if (isNaN(d.getTime())) return null;
+      return d.toISOString();
+    }
+    // Toast helper
+    function showToast(msg, duration=2000) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => {
+        t.classList.remove('show');
+      }, duration);
+    }
+    // Copy helper with toast
+    function copyText(t) {
+      navigator.clipboard.writeText(t || '');
+      showToast('Copied!');
+    }
+
+    // Auto-refresh indicator toggling
+    function updateAutoIndicator(indicatorId, enabled) {
+      const indicator = document.getElementById(indicatorId);
+      if(!indicator) return;
+      indicator.style.visibility = enabled ? 'visible' : 'hidden';
+    }
+
+    // ----- KPI summary -----
+    async function loadSummary() {
+      try {
+        const r = await fetch('/metrics/summary'); 
+        const j = await r.json();
+        document.getElementById('totals').textContent      = (j.postgres && j.postgres.total != null) ? j.postgres.total : '—';
+        document.getElementById('normalized').textContent  = (j.postgres && j.postgres.normalized != null) ? j.postgres.normalized : '—';
+        document.getElementById('quarantined').textContent = (j.postgres && j.postgres.quarantined != null) ? j.postgres.quarantined : '—';
+        yesNo(document.getElementById('pg'),     !!(j.stores && j.stores.postgres));
+        yesNo(document.getElementById('minio'),  !!(j.stores && j.stores.minio));
+        yesNo(document.getElementById('qdrant'), !!(j.stores && j.stores.qdrant));
+        yesNo(document.getElementById('neo4j'),  !!(j.stores && j.stores.neo4j));
+      } catch (_) {}
+    }
+    setInterval(loadSummary, 5000);
+
+    // ----- EVENTS logic -----
+    let page = { limit: 25, offset: 0, total: 0 };
+    let autoTimer = null;
+    let lastItems = [];
+    function buildParams(){
+      const params = new URLSearchParams();
+      const q = document.getElementById('q').value.trim();
+      const tenant = document.getElementById('tenant').value.trim();
+      const sensor = document.getElementById('sensor').value.trim();
+      const label = document.getElementById('label').value.trim();
+      const ts_from = toIsoOrNull('ts_from');
+      const ts_to   = toIsoOrNull('ts_to');
+      const limitSel = parseInt(document.getElementById('limit').value, 10) || 25;
+      page.limit = limitSel;
+      params.set('limit', String(page.limit));
+      params.set('offset', String(page.offset));
+      if(q) params.set('q', q);
+      if(tenant) params.set('tenant', tenant);
+      if(sensor) params.set('sensor', sensor);
+      if(label) params.set('label', label);
+      if(ts_from) params.set('ts_from', ts_from);
+      if(ts_to) params.set('ts_to', ts_to);
+      return params;
+    }
+    function renderRows(items){
+      const tbody = document.getElementById('logTable');
+      tbody.innerHTML = '';
+      if(!items.length){
+        tbody.innerHTML = '<tr><td colspan="6" class="muted">No results found. Adjust your filters or increase the limit.</td></tr>';
+        return;
+      }
+      lastItems = items.slice();
+      items.forEach(e => {
+        const tr=document.createElement('tr');
+        // time cell
+        const tTime=document.createElement('td');
+        tTime.innerHTML = `<div class="mono" title="${e.ts||''}">${fmtRel(e.ts||'')}</div>`;
+        // tenant
+        const tTenant=document.createElement('td');
+        tTenant.innerHTML = `<span class="badge">${e.tenant||''}</span>`;
+        // sensor
+        const tSensor=document.createElement('td');
+        tSensor.innerHTML = `<span class="badge">${e.sensor||''}</span>`;
+        // message with raw
+        const tMsg=document.createElement('td');
+        const msg = (e.message||'').replace(/</g,'&lt;');
+        const raw = e.raw ? `<details><summary>Raw</summary><pre class="mono">${JSON.stringify(e.raw, null, 2)}</pre></details>` : '';
+        tMsg.innerHTML = `${msg} ${raw}`;
+        // labels
+        const tLabels=document.createElement('td');
+        const labelsArr = Array.isArray(e.labels) ? e.labels : [];
+        tLabels.innerHTML = labelsArr.map(l=>`<span class="chip">${l}</span>`).join('');
+        // ID actions
+        const tId=document.createElement('td');
+        const safeId = (e.id || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        tId.innerHTML = `<div class="mono" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <a href="#" onclick="openDetail('${safeId}'); return false;"
+            style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block; max-width:220px;"
+            title="Open details">${safeId}</a>
+          <button class="small" onclick="navigator.clipboard.writeText('${safeId}'); showToast('Copied!');" title="Copy ID">Copy</button>
+          <button class="small subtle" onclick="prefillSimilar('${safeId}'); fetchSimilar();" title="Find similar events">Similar</button>
+        </div>`;
+        tr.append(tTime,tTenant,tSensor,tMsg,tLabels,tId);
+        tbody.appendChild(tr);
+      });
+    }
+    function renderPageMeta(){
+      const shown = Math.max(0, Math.min(page.limit, page.total - page.offset));
+      const first = page.total ? (page.offset + 1) : 0;
+      const last  = page.total ? (page.offset + shown) : 0;
+      document.getElementById('pageMeta').textContent = `${first}–${last} of ${page.total}`;
+      document.getElementById('prevBtn').disabled = page.offset <= 0;
+      document.getElementById('nextBtn').disabled = (page.offset + page.limit) >= page.total;
+    }
+    async function loadEvents(){
+      // show loading skeleton
+      const tbody = document.getElementById('logTable');
+      tbody.innerHTML = '<tr><td colspan="6" class="muted">Loading…</td></tr>';
+      const params = buildParams();
+      try {
+        const r = await fetch('/events?' + params.toString());
+        const j = await r.json();
+        page.total = (j.page && typeof j.page.total === 'number') ? j.page.total : 0;
+        renderRows(j.items || []);
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6" class="muted">Error loading events</td></tr>';
+      }
+      renderPageMeta();
+    }
+
+    // ----- Drawer logic -----
+    let currentDetail = null;
+    function openDrawer(){ document.getElementById('overlay').classList.add('show'); document.getElementById('drawer').classList.add('open'); }
+    function closeDrawer(){ document.getElementById('overlay').classList.remove('show'); document.getElementById('drawer').classList.remove('open'); currentDetail=null; }
+
+    async function openDetail(id){
+      try {
+        const r = await fetch('/events/' + encodeURIComponent(id));
+        const ev = await r.json();
+        currentDetail = ev;
+        // Fill header
+        document.getElementById('drawerTitle').textContent = `Event • ${ev.sensor || ''}`;
+        document.getElementById('eventId').textContent = ev.id || '—';
+        document.getElementById('eventTenant').textContent = ev.tenant || '—';
+        document.getElementById('eventSensor').textContent = ev.sensor || '—';
+        document.getElementById('eventTs').textContent = ev.ts || '—';
+        document.getElementById('eventMsg').textContent = ev.message || '—';
+        // labels
+        const labelsDiv = document.getElementById('eventLabels');
+        labelsDiv.innerHTML = '';
+        const labs = Array.isArray(ev.labels) ? ev.labels : [];
+        if (labs.length) {
+          labs.forEach(l => {
+            const span = document.createElement('span');
+            span.className = 'chip';
+            span.textContent = l;
+            labelsDiv.appendChild(span);
+          });
+        } else {
+          labelsDiv.textContent = '—';
+        }
+        // Raw (DB)
+        document.getElementById('eventRaw').textContent = JSON.stringify(ev.raw || {}, null, 2);
+        // Normalized (MinIO)
+        try {
+          const nr = await fetch('/ingest/' + encodeURIComponent(id));
+          const nj = await nr.json();
+          const norm = (nj && nj.data) ? nj.data : {};
+          document.getElementById('eventNorm').textContent = JSON.stringify(norm, null, 2);
+        } catch (_) {
+          document.getElementById('eventNorm').textContent = '—';
+        }
+        openDrawer();
+      } catch (e) {
+        alert('Failed to load event details');
+      }
+    }
+    function downloadJson() {
+      if(!currentDetail) return;
+      const blob = new Blob([JSON.stringify(currentDetail, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `event_${currentDetail.id || 'unknown'}.json`;
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+    }
+    function copyCurl(kind){
+      if(!currentDetail) return;
+      const id = currentDetail.id;
+      const key = (document.getElementById('apiKeyInput').value || '').trim() || 'YOUR_API_KEY';
+      let cmd = '';
+      if(kind === 'index'){
+        cmd = `curl -s -X POST http://localhost:8080/index/${id} -H 'X-API-Key: ${key}' | jq`;
+      } else if(kind === 'graph'){
+        cmd = `curl -s -X POST http://localhost:8080/graph/${id} -H 'X-API-Key: ${key}' | jq`;
+      }
+      copyText(cmd);
+    }
+
+    // Exports
+    function exportEvents(format){
+      const params = buildParams();
+      params.delete('offset');
+      const lim = parseInt(params.get('limit') || '25', 10);
+      if (!lim || lim === 25) { params.set('limit', '1000'); }
+      params.set('format', format);
+      const url = '/events/export?' + params.toString();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `events_export.${format === 'csv' ? 'csv' : 'ndjson'}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    // ----- ALERTS logic -----
+    let a_page = { limit: 25, offset: 0, total: 0 };
+    let a_autoTimer = null;
+    function a_buildParams(){
+      const p = new URLSearchParams();
+      const tenant = document.getElementById('a_tenant').value.trim();
+      const sensor = document.getElementById('a_sensor').value.trim();
+      const severity = document.getElementById('a_sev').value.trim();
+      const ts_from = toIsoOrNull('a_ts_from');
+      const ts_to   = toIsoOrNull('a_ts_to');
+      const limitSel = parseInt(document.getElementById('a_limit').value, 10) || 25;
+      a_page.limit = limitSel;
+      p.set('limit', String(a_page.limit));
+      p.set('offset', String(a_page.offset));
+      if(tenant)  p.set('tenant', tenant);
+      if(sensor)  p.set('sensor', sensor);
+      if(severity) p.set('severity', severity);
+      if(ts_from) p.set('ts_from', ts_from);
+      if(ts_to)   p.set('ts_to', ts_to);
+      return p;
+    }
+    function a_renderRows(items){
+      const tbody = document.getElementById('alertsTable');
+      tbody.innerHTML = '';
+      if(!items.length){
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">No alerts found. Adjust filters or time range.</td></tr>';
+        return;
+      }
+      items.forEach(a => {
+        const tr=document.createElement('tr');
+        // time
+        const tTime=document.createElement('td');
+        tTime.innerHTML = `<div class="mono" title="${a.ts||''}">${fmtRel(a.ts||'')}</div>`;
+        // severity
+        const tSev=document.createElement('td');
+        tSev.innerHTML = `<span class="chip">${a.severity||''}</span>`;
+        // tenant
+        const tTenant=document.createElement('td');
+        tTenant.innerHTML = `<span class="badge">${a.tenant||''}</span>`;
+        // sensor
+        const tSensor=document.createElement('td');
+        tSensor.innerHTML = `<span class="badge">${a.sensor||''}</span>`;
+        // rule id
+        const tRule=document.createElement('td');
+        const rid = (a.rule_id || '').toString();
+        tRule.innerHTML = rid ? `<span class="chip" title="${rid}">${rid}</span>` : '<span class="muted">—</span>';
+        // title
+        const tTitle=document.createElement('td');
+        tTitle.textContent = a.title || '';
+        // event
+        const tEvent=document.createElement('td');
+        const safeId = (a.event_id || '').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        tEvent.innerHTML = `<div class="mono" style="display:flex; align-items:center; gap:8px;">
+          <a href="#" onclick="openDetail('${safeId}'); return false;"
+            style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block; max-width:220px;"
+            title="Open underlying event">${safeId}</a>
+          <button onclick="navigator.clipboard.writeText('${safeId}'); showToast('Copied!');" title="Copy event ID">Copy</button>
+        </div>`;
+        tr.append(tTime,tSev,tTenant,tSensor,tRule,tTitle,tEvent);
+        tbody.appendChild(tr);
+      });
+    }
+    function a_renderPageMeta(){
+      const shown = Math.max(0, Math.min(a_page.limit, a_page.total - a_page.offset));
+      const first = a_page.total ? (a_page.offset + 1) : 0;
+      const last  = a_page.total ? (a_page.offset + shown) : 0;
+      document.getElementById('a_pageMeta').textContent = `${first}–${last} of ${a_page.total}`;
+      document.getElementById('a_prevBtn').disabled = a_page.offset <= 0;
+      document.getElementById('a_nextBtn').disabled = (a_page.offset + a_page.limit) >= a_page.total;
+    }
+    async function loadAlerts(){
+      const tbody = document.getElementById('alertsTable');
+      tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading…</td></tr>';
+      const p = a_buildParams();
+      try {
+        const r = await fetch('/alerts?' + p.toString());
+        const j = await r.json();
+        a_page.total = (j.page && typeof j.page.total === 'number') ? j.page.total : 0;
+        a_renderRows(j.items || []);
+      } catch (_) {
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">Error loading alerts</td></tr>';
+      }
+      a_renderPageMeta();
+    }
+
+    // KEV sync helper
+    async function syncKev(){
+      try{
+        if(!API_KEY){ setApiKey(); }
+        const r = await apiFetch('/feeds/kev/sync', { method:'POST' });
+        if(!r.ok){
+          const t = await r.text();
+          alert('KEV sync failed: ' + t);
+          return;
+        }
+        const j = await r.json();
+        alert(`KEV sync: fetched ${j.fetched}, inserted ${j.inserted}, alerts ${j.alerts_created}`);
+        loadAlerts();
+      }catch(e){
+        alert('KEV sync error: ' + e);
+      }
+    }
+
+    // ----- Similar events -----
+    function prefillSimilar(id) {
+      document.getElementById('similar-event-id').value = id || '';
+    }
+    async function fetchSimilar() {
+      const id = document.getElementById('similar-event-id').value.trim();
+      const limit = parseInt(document.getElementById('similar-limit').value, 10) || 8;
+      const out = document.getElementById('similar-results');
+      if(!id){ showToast('Please enter an Event ID'); return; }
+      out.innerHTML = '<div class="muted">Loading…</div>';
+      try {
+        const r = await fetch('/similar?event_id=' + encodeURIComponent(id) + '&limit=' + limit);
+        const j = await r.json();
+        if(!j.items || !j.items.length){
+          out.innerHTML = '<div class="muted">No similar events found.</div>';
+          return;
+        }
+          const list = document.createElement('ul');
+          j.items.forEach(sim => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="mono">${sim.id}</span> — score: ${sim.score.toFixed(4)}`;
+            li.style.marginBottom='4px';
+            li.onclick = () => openDetail(sim.id);
+            list.appendChild(li);
+          });
+          out.innerHTML = '';
+          out.appendChild(list);
+      } catch (e) {
+        out.innerHTML = '<div class="muted">Error fetching similar events.</div>';
+      }
+    }
+
+    // ----- Assets & Impacts helpers -----
+    async function loadAssets(){
+      try{
+        const q = (document.getElementById('assetQ')?.value || '').trim();
+        const tenant = (document.getElementById('tenant')?.value || 'acme').trim() || 'acme';
+        let url = `/assets?limit=100&tenant=${encodeURIComponent(tenant)}`;
+        if (q) url += `&q=${encodeURIComponent(q)}`;
+        const r = await apiFetch(url);
+        if(!r.ok){ document.getElementById('assetsTable').innerHTML = '<div class="muted">Failed to load assets</div>'; return; }
+        const j = await r.json();
+        const rows = (j.items||[]).map(a => `
+          <tr>
+            <td class="mono">${a.id}</td>
+            <td>${a.hostname||''}</td>
+            <td>${a.ip||''}</td>
+            <td>${a.vendor||''}</td>
+            <td>${a.product||''}</td>
+            <td>${a.version||''}</td>
+            <td>${a.cpe23||''}</td>
+            <td>${a.criticality||''}</td>
+            <td>${a.owner||''}</td>
+          </tr>
+        `).join('');
+        document.getElementById('assetsTable').innerHTML = `
+          <table>
+            <thead><tr>
+              <th>ID</th><th>Hostname</th><th>IP</th><th>Vendor</th><th>Product</th><th>Version</th><th>CPE</th><th>Criticality</th><th>Owner</th>
+            </tr></thead>
+            <tbody>${rows || '<tr><td colspan="9" class="muted">No assets found</td></tr>'}</tbody>
+          </table>
+        `;
+      }catch(_){
+        document.getElementById('assetsTable').innerHTML = '<div class="muted">Error loading assets</div>';
+      }
+    }
+    async function loadImpacts(latest){
+      try{
+        let url = '/impacts?limit=100';
+        const cve = (document.getElementById('cveQ')?.value || '').trim();
+        if(latest){ url += '&latest=1'; }
+        if(cve){ url += '&cve=' + encodeURIComponent(cve); }
+        const r = await apiFetch(url);
+        if(!r.ok){ document.getElementById('impactsTable').innerHTML = '<div class="muted">Failed to load impacts</div>'; return; }
+        const j = await r.json();
+        const rows = (j.items||[]).map(i => `
+          <tr>
+            <td>${i.cve_id||''}</td>
+            <td>${i.severity||''}</td>
+            <td>${i.match_reason||''}</td>
+            <td>${i.event_id ? `<a href="#" onclick="openDetail('${i.event_id}'); return false;" title="Open event">${i.event_id.slice(0,8)}…</a>` : ''}</td>
+          </tr>
+        `).join('');
+        document.getElementById('impactsTable').innerHTML = `
+          <table>
+            <thead><tr>
+              <th>CVE</th><th>Severity</th><th>Match reason</th><th>Event</th>
+            </tr></thead>
+            <tbody>${rows || '<tr><td colspan="4" class="muted">No impacts found</td></tr>'}</tbody>
+          </table>
+        `;
+      }catch(_){
+        document.getElementById('impactsTable').innerHTML = '<div class="muted">Error loading impacts</div>';
+      }
+    }
+    function seedAssetExample(){
+      // simple example seeding function; may call API for demonstration
+      alert('This function posts a sample asset via /assets (not implemented here).');
+    }
+
+    // ----- Settings API key helpers -----
+    document.addEventListener('DOMContentLoaded', () => {
+      const settingsApi = document.getElementById('settingsApiKey');
+      const btnSave = document.getElementById('btnSaveApiKey');
+      const btnClear = document.getElementById('btnClearApiKey');
+      if(settingsApi && btnSave && btnClear){
+        // populate from localStorage
+        settingsApi.value = API_KEY || '';
+        btnSave.addEventListener('click', () => {
+          const k = settingsApi.value.trim();
+          API_KEY = k;
+          localStorage.setItem('SECURITY_API_KEY', API_KEY);
+          showToast('API key saved');
+        });
+        btnClear.addEventListener('click', () => {
+          API_KEY = '';
+          localStorage.removeItem('SECURITY_API_KEY');
+          settingsApi.value = '';
+          showToast('API key cleared');
+        });
+      }
+    });
+
+    // ----- Event handlers -----
+    document.getElementById('btnKpiRefresh').addEventListener('click', loadSummary);
+
+    document.getElementById('btnExportCsv').addEventListener('click', () => exportEvents('csv'));
+    document.getElementById('btnExportNdjson').addEventListener('click', () => exportEvents('ndjson'));
+
+    document.getElementById('btnSearch').addEventListener('click', () => { page.offset = 0; loadEvents(); });
+    document.getElementById('btnReset').addEventListener('click', () => {
+      ['q','tenant','sensor','label','ts_from','ts_to'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+      document.getElementById('limit').value = '25';
+      page.offset = 0;
+      loadEvents();
+    });
+    document.getElementById('limit').addEventListener('change', () => { page.offset = 0; loadEvents(); });
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      page.offset = Math.max(0, page.offset - page.limit);
+      loadEvents();
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      const next = page.offset + page.limit;
+      if(next < page.total){ page.offset = next; loadEvents(); }
+    });
+    document.getElementById('auto').addEventListener('change', (e) => {
+      if(e.target.checked){ 
+        autoTimer = setInterval(loadEvents, 5000); 
+      } else { 
+        clearInterval(autoTimer); 
+      }
+      updateAutoIndicator('autoIndicator', e.target.checked);
+    });
+
+    // Alerts handlers
+    document.getElementById('a_btnSearch').addEventListener('click', () => { a_page.offset = 0; loadAlerts(); });
+    document.getElementById('a_btnReset').addEventListener('click', () => {
+      ['a_tenant','a_sensor','a_sev','a_ts_from','a_ts_to'].forEach(id => { const el=document.getElementById(id); if(!el) return; if(el.tagName==='SELECT'){ el.selectedIndex = 0; } else { el.value=''; } });
+      document.getElementById('a_limit').value = '25';
+      a_page.offset = 0;
+      loadAlerts();
+    });
+    document.getElementById('a_limit').addEventListener('change', () => { a_page.offset = 0; loadAlerts(); });
+    document.getElementById('a_prevBtn').addEventListener('click', () => {
+      a_page.offset = Math.max(0, a_page.offset - a_page.limit);
+      loadAlerts();
+    });
+    document.getElementById('a_nextBtn').addEventListener('click', () => {
+      const next = a_page.offset + a_page.limit;
+      if(next < a_page.total){ a_page.offset = next; loadAlerts(); }
+    });
+    document.getElementById('a_auto').addEventListener('change', (e) => {
+      if(e.target.checked){ 
+        a_autoTimer = setInterval(loadAlerts, 5000); 
+      } else { 
+        clearInterval(a_autoTimer); 
+      }
+      updateAutoIndicator('alertsAutoIndicator', e.target.checked);
+    });
+    document.getElementById('btnKevOnly').addEventListener('click', () => {
+      const s = document.getElementById('a_sensor');
+      if (s) s.value = 'kev';
+      a_page.offset = 0;
+      loadAlerts();
+    });
+    document.getElementById('btnAllAlerts').addEventListener('click', () => {
+      ['a_tenant','a_sensor','a_sev','a_ts_from','a_ts_to'].forEach(id => {
+        const el=document.getElementById(id);
+        if(!el) return;
+        if(el.tagName==='SELECT'){ el.selectedIndex = 0; } else { el.value=''; }
+      });
+      document.getElementById('a_limit').value = '25';
+      a_page.offset = 0;
+      loadAlerts();
+    });
+    document.getElementById('btnSyncKev').addEventListener('click', syncKev);
+
+    // Similar events search button
+    document.getElementById('btnSimilarFind').addEventListener('click', fetchSimilar);
+
+    // Keyboard shortcuts: / focus search; g e events; g a alerts; g o overview; g s similar; g x assets; g i impacts; g k settings; Escape close drawer
+    let keyBuffer = '';
+    document.addEventListener('keydown', (e) => {
+      const active = document.activeElement;
+      // Prevent capturing inside inputs
+      if(active && (active.tagName==='INPUT' || active.tagName==='TEXTAREA')) {
+        // slash inside input should not open search
+        return;
+      }
+      if (e.key === '/') {
+        // focus search
+        const q = document.getElementById('q');
+        if(q){ q.focus(); e.preventDefault(); }
+      } else if (e.key === 'Escape') {
+        closeDrawer();
+      } else {
+        keyBuffer += e.key.toLowerCase();
+        clearTimeout(window.__kbTimer);
+        window.__kbTimer = setTimeout(() => { keyBuffer=''; }, 500);
+        if(keyBuffer === 'ge'){ location.hash = '#events'; keyBuffer=''; }
+        else if(keyBuffer === 'ga'){ location.hash = '#alerts'; keyBuffer=''; }
+        else if(keyBuffer === 'go'){ location.hash = '#overview'; keyBuffer=''; }
+        else if(keyBuffer === 'gs'){ location.hash = '#similar'; keyBuffer=''; }
+        else if(keyBuffer === 'gx'){ location.hash = '#assets'; keyBuffer=''; }
+        else if(keyBuffer === 'gi'){ location.hash = '#impacts'; keyBuffer=''; }
+        else if(keyBuffer === 'gk'){ location.hash = '#settings'; keyBuffer=''; }
+      }
+    });
+
+    // Initial loads
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSummary();
+      loadEvents();
+      loadAlerts();
+    });
+  </script>
+</body>

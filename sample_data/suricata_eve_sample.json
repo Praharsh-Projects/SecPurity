@@ -1,0 +1,2 @@
+{"timestamp":"2025-08-18T10:40:00Z","event_type":"alert","src_ip":"10.0.3.4","src_port":51512,"dest_ip":"203.0.113.7","dest_port":443,"proto":"TCP","alert":{"signature_id":2024257,"signature":"ET TROJAN Possible C2 Beacon"}}
+{"timestamp":"2025-08-18T10:41:05Z","event_type":"flow","src_ip":"10.0.3.4","src_port":51512,"dest_ip":"203.0.113.7","dest_port":443,"proto":"TCP"}

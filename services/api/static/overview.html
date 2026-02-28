@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>SecPurityAI • Overview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#0f172a;--card:#111827;--border:#1f2937;--border2:#334155;--text:#e5e7eb;--muted:#9ca3af;--r:12px}
+    *{box-sizing:border-box} body{margin:24px;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .layout{display:grid;grid-template-columns:240px 1fr;gap:16px}
+    nav{position:sticky;top:24px;height:calc(100vh - 48px);background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:6px}
+    .brand{font-weight:700;font-size:16px;margin:2px 6px 8px}
+    .nav a{display:block;padding:8px 10px;border-radius:10px;color:var(--text);text-decoration:none;border:1px solid transparent}
+    .nav a:hover{background:var(--card);border-color:var(--border)}
+    .nav a[aria-current=page]{background:var(--card);border-color:var(--border2)}
+    @media (max-width:980px){.layout{display:block}nav{position:relative;height:auto;flex-direction:row;overflow:auto;margin-bottom:12px}.nav a{white-space:nowrap}}
+    .section{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .card{flex:1 1 220px;min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+    .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .value{font-size:22px;font-weight:700}
+    .ok{color:#34d399}.bad{color:#f87171}
+    details.help{border:1px solid var(--border2);background:#0b1220;border-radius:10px;padding:10px 12px;margin:10px 0 14px}
+    details.help summary{cursor:pointer;color:#93c5fd;font-weight:600;margin:-4px 0 6px}
+    details .cols{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:10px}
+    @media (max-width:820px){details .cols{grid-template-columns:1fr}}
+    button{padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#0f172a;color:var(--text);cursor:pointer}
+    button:hover{background:#1f2937}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="nav" aria-label="Main">
+      <div class="brand">SecPurityAI</div>
+      <a href="/static/dashboard.html">Dashboard (all)</a>
+      <a href="/static/overview.html" aria-current="page">Overview</a>
+      <a href="/static/events.html">Events</a>
+      <a href="/static/alerts.html">Alerts</a>
+      <a href="/static/similar.html">Similar</a>
+      <a href="/static/assets.html">Assets</a>
+      <a href="/static/impacts.html">Impacts</a>
+      <a href="/static/settings.html">Settings</a>
+    </nav>
+
+    <main>
+      <h1 style="margin:0 0 16px;">Overview</h1>
+      <section class="section">
+        <details class="help" open>
+          <summary>What do these numbers mean?</summary>
+          <div class="cols" style="color:#cbd5e1;font-size:13px;line-height:1.5">
+            <div>
+              <strong>Totals</strong>: events stored in Postgres.<br/>
+              <strong>Normalized</strong>: events converted into ECS-lite JSON.<br/>
+              <strong>Quarantined</strong>: events failed data-quality checks.
+            </div>
+            <div>
+              <strong>Stores</strong> health: PG, MinIO, Qdrant, Neo4j — “ok” means reachable now.
+            </div>
+          </div>
+        </details>
+        <div class="row">
+          <div class="card"><div class="label">Totals</div><div id="totals" class="value">—</div><div class="label">Events ingested</div></div>
+          <div class="card"><div class="label">Normalized</div><div id="normalized" class="value">—</div><div class="label">Valid ECS-lite</div></div>
+          <div class="card"><div class="label">Quarantined</div><div id="quarantined" class="value">—</div><div class="label">Failed DQ checks</div></div>
+          <div class="card">
+            <div class="label">Stores</div>
+            PG: <span id="pg">—</span> · MinIO: <span id="minio">—</span> · Qdrant: <span id="qdrant">—</span> · Neo4j: <span id="neo4j">—</span>
+            <button id="btnRefresh" style="margin-left:8px">Refresh</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function yesNo(el, ok){ el.textContent = ok ? 'ok':'down'; el.className = ok ? 'ok':'bad'; }
+    async function loadSummary(){
+      try{
+        const r = await fetch('/metrics/summary');
+        const j = await r.json();
+        document.getElementById('totals').textContent      = j?.postgres?.total ?? '—';
+        document.getElementById('normalized').textContent  = j?.postgres?.normalized ?? '—';
+        document.getElementById('quarantined').textContent = j?.postgres?.quarantined ?? '—';
+        yesNo(document.getElementById('pg'),     !!j?.stores?.postgres);
+        yesNo(document.getElementById('minio'),  !!j?.stores?.minio);
+        yesNo(document.getElementById('qdrant'), !!j?.stores?.qdrant);
+        yesNo(document.getElementById('neo4j'),  !!j?.stores?.neo4j);
+      }catch(_){}
+    }
+    document.getElementById('btnRefresh').addEventListener('click', loadSummary);
+    loadSummary(); setInterval(loadSummary, 5000);
+  </script>
+</body>
+</html>

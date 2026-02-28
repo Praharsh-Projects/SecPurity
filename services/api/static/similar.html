@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>SecPurityAI • Similar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#0f172a;--card:#111827;--border:#1f2937;--border2:#334155;--text:#e5e7eb;--muted:#9ca3af;--r:12px}
+    *{box-sizing:border-box} body{margin:24px;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .layout{display:grid;grid-template-columns:240px 1fr;gap:16px}
+    nav{position:sticky;top:24px;height:calc(100vh - 48px);background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:6px}
+    .brand{font-weight:700;font-size:16px;margin:2px 6px 8px}
+    .nav a{display:block;padding:8px 10px;border-radius:10px;color:var(--text);text-decoration:none;border:1px solid transparent}
+    .nav a:hover{background:var(--card);border-color:var(--border)}
+    .nav a[aria-current=page]{background:var(--card);border-color:var(--border2)}
+    @media (max-width:980px){.layout{display:block}nav{position:relative;height:auto;flex-direction:row;overflow:auto;margin-bottom:12px}.nav a{white-space:nowrap}}
+    .section{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+    input,button{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)}
+    button{cursor:pointer}button:hover{background:#1f2937}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="nav" aria-label="Main">
+      <div class="brand">SecPurityAI</div>
+      <a href="/static/dashboard.html">Dashboard (all)</a>
+      <a href="/static/overview.html">Overview</a>
+      <a href="/static/events.html">Events</a>
+      <a href="/static/alerts.html">Alerts</a>
+      <a href="/static/similar.html" aria-current="page">Similar</a>
+      <a href="/static/assets.html">Assets</a>
+      <a href="/static/impacts.html">Impacts</a>
+      <a href="/static/settings.html">Settings</a>
+    </nav>
+
+    <main>
+      <h1 style="margin:0 0 16px;">Explore Similar Events</h1>
+      <section class="section">
+        <details open style="border:1px solid #334155;background:#0b1220;border-radius:10px;padding:10px 12px;margin:10px 0 14px">
+          <summary style="cursor:pointer;color:#93c5fd;font-weight:600;margin:-4px 0 6px">What is this?</summary>
+          <div style="color:#cbd5e1;font-size:13px;line-height:1.5">Paste an <strong>Event ID</strong> to retrieve nearest neighbors (Qdrant). Limit controls the number of results.</div>
+        </details>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="similar-event-id" class="mono" placeholder="Event ID"/>
+          <input id="similar-limit" type="number" min="1" max="50" value="8" style="width:100px"/>
+          <button id="btnSimilarFind">Find Similar</button>
+        </div>
+        <div id="similar-results" style="margin-top:12px"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function param(name){const u=new URL(location.href);return u.searchParams.get(name)}
+    const pre=param('event_id');if(pre)document.getElementById('similar-event-id').value=pre;
+    async function fetchSimilar(){const id=document.getElementById('similar-event-id').value.trim();const limit=parseInt(document.getElementById('similar-limit').value,10)||8;const out=document.getElementById('similar-results');if(!id){out.textContent='Please enter an Event ID.';return}out.textContent='Loading…';try{const r=await fetch('/similar?event_id='+encodeURIComponent(id)+'&limit='+limit);const j=await r.json();if(!j.items?.length){out.textContent='No similar events found.';return}out.innerHTML='';const ul=document.createElement('ul');j.items.forEach(s=>{const li=document.createElement('li');li.innerHTML=`<span class="mono">${s.id}</span> — score: ${s.score.toFixed(4)}`;ul.appendChild(li)});out.appendChild(ul)}catch(_){out.textContent='Error fetching similar events.'}}
+    document.getElementById('btnSimilarFind').addEventListener('click',fetchSimilar);
+    if(pre){fetchSimilar()}
+  </script>
+</body>
+</html>

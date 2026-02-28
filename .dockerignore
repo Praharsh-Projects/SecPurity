@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Git & macOS
+.git/
+.DS_Store
+**/.DS_Store
+
+# Env files
+.env

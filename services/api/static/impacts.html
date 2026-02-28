@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>SecPurityAI • Impacts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#0f172a;--card:#111827;--border:#1f2937;--border2:#334155;--text:#e5e7eb;--muted:#9ca3af;--r:12px}
+    *{box-sizing:border-box} body{margin:24px;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .layout{display:grid;grid-template-columns:240px 1fr;gap:16px}
+    nav{position:sticky;top:24px;height:calc(100vh - 48px);background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:6px}
+    .brand{font-weight:700;font-size:16px;margin:2px 6px 8px}
+    .nav a{display:block;padding:8px 10px;border-radius:10px;color:var(--text);text-decoration:none;border:1px solid transparent}
+    .nav a:hover{background:var(--card);border-color:var(--border)}
+    .nav a[aria-current=page]{background:var(--card);border-color:var(--border2)}
+    @media (max-width:980px){.layout{display:block}nav{position:relative;height:auto;flex-direction:row;overflow:auto;margin-bottom:12px}.nav a{white-space:nowrap}}
+    .section{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+    input,button{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)}
+    button{cursor:pointer}button:hover{background:#1f2937}
+    .table-wrap{overflow:auto;border-radius:10px;border:1px solid var(--border);margin-top:.5rem;max-height:320px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    thead th{position:sticky;top:0;background:#0f172a;text-align:left;padding:10px;border-bottom:1px solid var(--border)}
+    tbody td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+    tbody tr:nth-child(odd){background:#0f172a}tbody tr:nth-child(even){background:#0c1426}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="nav" aria-label="Main">
+      <div class="brand">SecPurityAI</div>
+      <a href="/static/dashboard.html">Dashboard (all)</a>
+      <a href="/static/overview.html">Overview</a>
+      <a href="/static/events.html">Events</a>
+      <a href="/static/alerts.html">Alerts</a>
+      <a href="/static/similar.html">Similar</a>
+      <a href="/static/assets.html">Assets</a>
+      <a href="/static/impacts.html" aria-current="page">Impacts</a>
+      <a href="/static/settings.html">Settings</a>
+    </nav>
+
+    <main>
+      <h1 style="margin:0 0 16px;">CVE ➜ Asset Impacts</h1>
+      <section class="section">
+        <details open style="border:1px solid #334155;background:#0b1220;border-radius:10px;padding:10px 12px;margin:10px 0 14px">
+          <summary style="cursor:pointer;color:#93c5fd;font-weight:600;margin:-4px 0 6px">About this panel</summary>
+          <div style="color:#cbd5e1;font-size:13px;line-height:1.5">Matches between vulnerability records (KEV/NVD) and your assets via CPE/vendor/product/version.</div>
+        </details>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="cveQ" placeholder="CVE-YYYY-NNNN" style="min-width:220px"/>
+          <button id="btnCve">Search CVE</button>
+          <button id="btnLatest">Latest</button>
+        </div>
+        <div id="impactsTable" class="table-wrap"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let API_KEY=localStorage.getItem('SECURITY_API_KEY')||'';
+    function apiFetch(url,opts){opts=opts||{};opts.headers=Object.assign({'X-API-Key':API_KEY},opts.headers||{});return fetch(url,opts)}
+    async function loadImpacts(latest){let url='/impacts?limit=100';const cve=(document.getElementById('cveQ').value||'').trim();if(latest)url+='&latest=1';if(cve)url+='&cve='+encodeURIComponent(cve);const el=document.getElementById('impactsTable');el.textContent='Loading…';try{const r=await apiFetch(url);if(!r.ok){el.textContent='Failed to load impacts';return}const j=await r.json();const rows=(j.items||[]).map(i=>`<tr><td>${i.cve_id||''}</td><td>${i.severity||''}</td><td>${i.match_reason||''}</td><td>${i.event_id?'<span class="mono">'+i.event_id+'</span>':''}</td></tr>`).join('');el.innerHTML=`<table><thead><tr><th>CVE</th><th>Severity</th><th>Match reason</th><th>Event</th></tr></thead><tbody>${rows||'<tr><td colspan="4" style="color:#9ca3af">No impacts found</td></tr>'}</tbody></table>`}catch(_){el.textContent='Error loading impacts'}}
+    document.getElementById('btnCve').addEventListener('click',()=>loadImpacts(false));
+    document.getElementById('btnLatest').addEventListener('click',()=>loadImpacts(true));
+    loadImpacts(true);
+  </script>
+</body>
+</html>

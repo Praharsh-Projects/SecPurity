@@ -1,0 +1,31 @@
+# Ignore docker volumes and data dumps
+volumes/
+data/
+state/kev/kev_state.json
+state/reports/*
+!state/reports/.gitkeep
+*.tar.gz
+*.mmdb
+*.zip
+*.log
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+.venv/
+
+# Node/React builds
+node_modules/
+build/
+dist/
+
+# OS
+.DS_Store
+
+# Local secrets scratch file
+supersecret_change_me

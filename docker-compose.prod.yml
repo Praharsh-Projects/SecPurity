@@ -1,0 +1,42 @@
+services:
+  api:
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    volumes:
+      - ./data:/data:ro
+      - ./data/maxmind:/data/maxmind:ro
+
+  postgres:
+    restart: unless-stopped
+    ports: []
+
+  minio:
+    restart: unless-stopped
+    ports: []
+
+  qdrant:
+    restart: unless-stopped
+    ports: []
+
+  neo4j:
+    restart: unless-stopped
+    ports: []
+
+  connector:
+    restart: unless-stopped
+
+  feed-nvd:
+    restart: unless-stopped
+
+  feed-kev:
+    restart: unless-stopped
+
+  worker:
+    restart: unless-stopped
+
+  evaluator:
+    restart: unless-stopped
+
+  tail-suricata:
+    restart: unless-stopped

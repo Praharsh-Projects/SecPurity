@@ -1,0 +1,103 @@
+# Simple, readable rules. You can add more later.
+# Each rule has matchers and an action (severity/title/summary).
+
+rules:
+  - id: suricata-c2-or-ioc
+    when:
+      sensor: "suricata"
+      any_label_contains: ["ioc_hit", "alert", "sid:"]
+      # case-insensitive; match C2, command-and-control (hyphen or space), beacon or beaconing
+      message_regex: '(?i)\bC2\b|command[- ]and[- ]control|beacon(ing)?'
+    action:
+      severity: "HIGH"
+      title: "Suricata IOC / C2 indicator"
+      summary: "Suricata event contains IOC or C2 signature. Review flows and isolate if confirmed."
+
+  - id: nvd-critical-cvss
+    when:
+      sensor: "nvd"
+      cvss_gte: 9.0
+    action:
+      severity: "CRITICAL"
+      title: "Critical CVE in NVD feed"
+      summary: "New or modified CVE with CVSS >= 9.0. Check affected assets and remediation timeline."
+
+  - id: nvd-high-cvss
+    when:
+      sensor: "nvd"
+      cvss_gte: 7.0
+    action:
+      severity: "HIGH"
+      title: "High CVE in NVD feed"
+      summary: "CVE with CVSS >= 7.0. Prioritize based on asset exposure."
+
+  # Consolidated high-risk destination country rule
+  - id: geo-high-risk-country
+    when:
+      sensor: "suricata"
+      any_label_contains: ["dst_cc:RU", "dst_cc:KP", "dst_cc:IR", "dst_cc:CN"]
+    action:
+      severity: "HIGH"
+      title: "Traffic to high-risk country"
+      summary: "Destination is in a high-risk country (monitor/contain)."
+
+  # Informational: common destination countries (example)
+  - id: geo-any-dst-country-info
+    when:
+      any_label_contains: ["dst_cc:US","dst_cc:GB","dst_cc:DE"]   # start with a few; expand later
+    action:
+      severity: "INFO"
+      title: "Destination has GeoIP country"
+      summary: "Destination IP resolved to a (selected) country via GeoIP."
+
+  # Known large provider ASN: Low
+  - id: geo-known-asn-low
+    when:
+      any_label_contains: ["dst_asn:AS15169","dst_asn:AS13335","dst_asn:AS16509"]  # Google/Cloudflare/AWS
+    action:
+      severity: "LOW"
+      title: "Known major provider ASN"
+      summary: "Destination ASN is a large provider (could be benign)."
+
+  # Explicit ASN watchlist: Medium
+  - id: geo-watch-asn
+    when:
+      any_label_contains: ["dst_asn:AS13335","dst_asn:AS15169"]   # Cloudflare, Google (example)
+    action:
+      severity: "MEDIUM"
+      title: "Destination ASN is on watchlist"
+      summary: "ASN watchlist matched on destination."
+
+  # Optional: add a medium tier for visibility without noise
+  - id: nvd-medium-cvss
+    when:
+      sensor: "nvd"
+      cvss_gte: 4.0
+    action:
+      severity: "MEDIUM"
+      title: "Medium CVE in NVD feed"
+      summary: "CVE with CVSS >= 4.0. Queue for routine patching."
+
+  - id: test_dns
+    description: "Flag DNS alerts with severity >= 2"
+    when:
+      sensor: "suricata"
+      event_type: "alert"
+      alert.category: "Potentially Bad DNS"
+      alert.severity_gte: 2
+    add_labels:
+      - "dns_watch"
+      - "sev:${alert.severity}"
+
+  - id: kev-known-exploited
+    when:
+      sensor: "kev"
+    action:
+      severity: "CRITICAL"
+      title: "Known Exploited Vulnerability (CISA KEV)"
+      summary: "CVE appears in CISA KEV. Prioritize patch or mitigation."
+
+# NOTE: 'defaults' are only effective if your rules engine reads them.
+defaults:
+  missing_sensor: "LOW"
+  missing_message: "LOW"

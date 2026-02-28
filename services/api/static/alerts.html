@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>SecPurityAI • Alerts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#0f172a;--card:#111827;--border:#1f2937;--border2:#334155;--text:#e5e7eb;--muted:#9ca3af;--r:12px}
+    *{box-sizing:border-box} body{margin:24px;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .layout{display:grid;grid-template-columns:240px 1fr;gap:16px}
+    nav{position:sticky;top:24px;height:calc(100vh - 48px);background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:6px}
+    .brand{font-weight:700;font-size:16px;margin:2px 6px 8px}
+    .nav a{display:block;padding:8px 10px;border-radius:10px;color:var(--text);text-decoration:none;border:1px solid transparent}
+    .nav a:hover{background:var(--card);border-color:var(--border)}
+    .nav a[aria-current=page]{background:var(--card);border-color:var(--border2)}
+    @media (max-width:980px){.layout{display:block}nav{position:relative;height:auto;flex-direction:row;overflow:auto;margin-bottom:12px}.nav a{white-space:nowrap}}
+    .section{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+    .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    .group{display:flex;flex-direction:column;gap:6px;min-width:180px}
+    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)}
+    button{cursor:pointer}button:hover{background:#1f2937}
+    .pager{display:flex;gap:8px;align-items:center}
+    .table-wrap{overflow:auto;border-radius:10px;border:1px solid var(--border);margin-top:10px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    thead th{position:sticky;top:0;background:#0f172a;text-align:left;padding:10px;border-bottom:1px solid var(--border)}
+    tbody td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+    tbody tr:nth-child(odd){background:#0f172a}tbody tr:nth-child(even){background:#0c1426}
+    .chip{display:inline-block;margin-right:6px;padding:2px 6px;border-radius:6px;background:#0b1220;border:1px solid var(--border2);font-size:12px}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border2);background:#0b1220;font-size:12px}
+    .toast{position:fixed;bottom:24px;right:24px;background:#111827;border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);opacity:0;transition:.3s;transform:translateY(20px);z-index:1200}
+    .toast.show{opacity:1;transform:translateY(0)}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="nav" aria-label="Main">
+      <div class="brand">SecPurityAI</div>
+      <a href="/static/dashboard.html">Dashboard (all)</a>
+      <a href="/static/overview.html">Overview</a>
+      <a href="/static/events.html">Events</a>
+      <a href="/static/alerts.html" aria-current="page">Alerts</a>
+      <a href="/static/similar.html">Similar</a>
+      <a href="/static/assets.html">Assets</a>
+      <a href="/static/impacts.html">Impacts</a>
+      <a href="/static/settings.html">Settings</a>
+    </nav>
+
+    <main>
+      <h1 style="margin:0 0 16px;">Alerts</h1>
+
+      <section class="section">
+        <details open style="border:1px solid #334155;background:#0b1220;border-radius:10px;padding:10px 12px;margin:10px 0 14px">
+          <summary style="cursor:pointer;color:#93c5fd;font-weight:600;margin:-4px 0 6px">About Alerts</summary>
+          <div style="color:#cbd5e1;font-size:13px;line-height:1.5;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:10px">
+            <div><strong>Severity</strong> from sensor; <strong>Rule</strong> id (when available); <strong>Event</strong> is the linked event id.</div>
+            <div><strong>Quick</strong>: KEV only / All / Sync KEV now. <strong>Auto refresh</strong>: every 5s.</div>
+          </div>
+        </details>
+
+        <div class="toolbar">
+          <div class="group"><label class="label">Tenant</label><input id="a_tenant" placeholder="acme"/></div>
+          <div class="group"><label class="label">Sensor</label><input id="a_sensor" placeholder="suricata / nvd / zeek"/></div>
+          <div class="group"><label class="label">Severity</label>
+            <select id="a_sev"><option value="">Any</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select>
+          </div>
+          <div class="group"><label class="label">From</label><input id="a_ts_from" type="datetime-local"/></div>
+          <div class="group"><label class="label">To</label><input id="a_ts_to" type="datetime-local"/></div>
+          <div class="group"><label class="label">Limit</label><select id="a_limit"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></div>
+          <div class="group"><label class="label" style="opacity:0">.</label><button id="a_btnSearch">Search</button></div>
+          <div class="group"><label class="label" style="opacity:0">.</label><button id="a_btnReset">Reset</button></div>
+          <div class="group" style="min-width:220px">
+            <label class="label">Quick</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="btnKevOnly">KEV only</button><button id="btnAllAlerts">All</button><button id="btnSyncKev">Sync KEV now</button></div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+          <div class="label" id="a_pageMeta" style="text-transform:none;letter-spacing:0;color:#9ca3af">—</div>
+          <div class="pager"><button id="a_prevBtn">Prev</button><button id="a_nextBtn">Next</button></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:180px">Time</th><th style="width:120px">Severity</th><th style="width:110px">Tenant</th><th style="width:110px">Sensor</th><th style="width:220px">Rule</th><th>Title</th><th style="width:280px">Event</th></tr></thead>
+            <tbody id="alertsTable"><tr><td colspan="7" class="label" style="text-transform:none;color:#9ca3af">Run a search.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // API key for KEV sync endpoints if your backend requires it
+    let API_KEY = localStorage.getItem('SECURITY_API_KEY') || '';
+    function apiFetch(url,opts){opts=opts||{};opts.headers=Object.assign({'X-API-Key':API_KEY},opts.headers||{});return fetch(url,opts)}
+    function fmtRel(iso){try{const d=new Date(iso),s=(Date.now()-d)/1000;if(isNaN(s))return iso;if(s<60)return Math.floor(s)+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'}catch(e){return iso}}
+    function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+    function toIsoOrNull(id){const v=document.getElementById(id).value;if(!v)return null;const d=new Date(v);return isNaN(d)?null:d.toISOString()}
+
+    let a_page={limit:25,offset:0,total:0};
+    function a_buildParams(){const p=new URLSearchParams();const tenant=document.getElementById('a_tenant').value.trim();const sensor=document.getElementById('a_sensor').value.trim();const sev=document.getElementById('a_sev').value.trim();const f=toIsoOrNull('a_ts_from'),t=toIsoOrNull('a_ts_to');a_page.limit=parseInt(document.getElementById('a_limit').value,10)||25;p.set('limit',String(a_page.limit));p.set('offset',String(a_page.offset));if(tenant)p.set('tenant',tenant);if(sensor)p.set('sensor',sensor);if(sev)p.set('severity',sev);if(f)p.set('ts_from',f);if(t)p.set('ts_to',t);return p}
+    function a_renderRows(items){const tbody=document.getElementById('alertsTable');tbody.innerHTML='';if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="label" style="text-transform:none;color:#9ca3af">No alerts</td></tr>';return}
+      items.forEach(a=>{const tr=document.createElement('tr');
+        const t1=document.createElement('td');t1.innerHTML=`<div class="mono" title="${a.ts||''}">${fmtRel(a.ts||'')}</div>`;
+        const t2=document.createElement('td');t2.innerHTML=`<span class="chip">${a.severity||''}</span>`;
+        const t3=document.createElement('td');t3.innerHTML=`<span class="badge">${a.tenant||''}</span>`;
+        const t4=document.createElement('td');t4.innerHTML=`<span class="badge">${a.sensor||''}</span>`;
+        const t5=document.createElement('td');const rid=(a.rule_id||'').toString();t5.innerHTML=rid?`<span class="chip" title="${rid}">${rid}</span>`:'<span class="muted">—</span>';
+        const t6=document.createElement('td');t6.textContent=a.title||'';
+        const t7=document.createElement('td');const id=(a.event_id||'').replace(/"/g,'&quot;');t7.innerHTML=`<div class="mono" style="display:flex;gap:8px;align-items:center"><a href="/static/events.html#open=${id}" title="Open event">${id}</a><button onclick="navigator.clipboard.writeText('${id}');showToast('Copied!')">Copy</button></div>`;
+        tr.append(t1,t2,t3,t4,t5,t6,t7);tbody.appendChild(tr)});
+    }
+    function a_renderMeta(){const shown=Math.max(0,Math.min(a_page.limit,a_page.total-a_page.offset));const first=a_page.total?(a_page.offset+1):0;const last=a_page.total?(a_page.offset+shown):0;document.getElementById('a_pageMeta').textContent=`${first}–${last} of ${a_page.total}`;document.getElementById('a_prevBtn').disabled=a_page.offset<=0;document.getElementById('a_nextBtn').disabled=(a_page.offset+a_page.limit)>=a_page.total}
+    async function loadAlerts(){const tb=document.getElementById('alertsTable');tb.innerHTML='<tr><td colspan="7" class="label" style="text-transform:none;color:#9ca3af">Loading…</td></tr>';try{const r=await fetch('/alerts?'+a_buildParams().toString());const j=await r.json();a_page.total=(j.page&&typeof j.page.total==='number')?j.page.total:0;a_renderRows(j.items||[])}catch(_){tb.innerHTML='<tr><td colspan="7" class="label" style="text-transform:none;color:#9ca3af">Error</td></tr>'}a_renderMeta()}
+    document.getElementById('a_btnSearch').addEventListener('click',()=>{a_page.offset=0;loadAlerts()});
+    document.getElementById('a_btnReset').addEventListener('click',()=>{['a_tenant','a_sensor','a_sev','a_ts_from','a_ts_to'].forEach(id=>{const el=document.getElementById(id);if(!el)return;if(el.tagName==='SELECT')el.selectedIndex=0;else el.value=''});document.getElementById('a_limit').value='25';a_page.offset=0;loadAlerts()});
+    document.getElementById('a_limit').addEventListener('change',()=>{a_page.offset=0;loadAlerts()});
+    document.getElementById('a_prevBtn').addEventListener('click',()=>{a_page.offset=Math.max(0,a_page.offset-a_page.limit);loadAlerts()});
+    document.getElementById('a_nextBtn').addEventListener('click',()=>{const n=a_page.offset+a_page.limit;if(n<a_page.total){a_page.offset=n;loadAlerts()}});
+
+    // Quick actions
+    document.getElementById('btnKevOnly').addEventListener('click',()=>{document.getElementById('a_sensor').value='kev';a_page.offset=0;loadAlerts()});
+    document.getElementById('btnAllAlerts').addEventListener('click',()=>{['a_tenant','a_sensor','a_sev','a_ts_from','a_ts_to'].forEach(id=>{const el=document.getElementById(id);if(!el)return;if(el.tagName==='SELECT')el.selectedIndex=0;else el.value=''});document.getElementById('a_limit').value='25';a_page.offset=0;loadAlerts()});
+    document.getElementById('btnSyncKev').addEventListener('click',async()=>{try{const r=await apiFetch('/feeds/kev/sync',{method:'POST'});if(!r.ok){alert('KEV sync failed');return}const j=await r.json();alert(`KEV sync: fetched ${j.fetched}, inserted ${j.inserted}, alerts ${j.alerts_created}`);loadAlerts()}catch(e){alert('KEV sync error')}});
+
+    loadAlerts();
+  </script>
+</body>
+</html>

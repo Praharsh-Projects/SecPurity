@@ -1,0 +1,8 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks: [secai]
